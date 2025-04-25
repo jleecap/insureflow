@@ -1,0 +1,75 @@
+{
+    "Standard Terms and Conditions": {
+        "Covered Perils": [
+            "Fire",
+            "lightning",
+            "explosion",
+            "storm",
+            "hail",
+            "flood (if endorsed)",
+            "theft",
+            "vandalism",
+            "malicious damage"
+        ],
+        "Property Covered": [
+            "Buildings (owned or leased)",
+            "contents",
+            "stock/inventory",
+            "machinery/equipment",
+            "tenant improvements"
+        ],
+        "Business Interruption": [
+            "Optional coverage",
+            "includes gross profit",
+            "increased cost of working",
+            "additional expenses"
+        ],
+        "Valuation Basis": [
+            "Replacement cost (new for old)",
+            "Actual Cash Value (ACV) as alternative"
+        ],
+        "Policy Period": [
+            "Standard 12-month term",
+            "prorated for mid-term changes or cancellations"
+        ],
+        "Claims Settlement": [
+            "Subject to loss adjustment",
+            "proof of insurable interest"
+        ]
+    },
+    "Standard Exclusions": [
+        "War",
+        "terrorism (unless separately endorsed)",
+        "Nuclear risks",
+        "Gradual pollution or contamination",
+        "Wear and tear",
+        "rust",
+        "corrosion",
+        "mechanical breakdown",
+        "Illegal activities or intentional acts",
+        "Cyber-related losses (unless cyber coverage is added)",
+        "Unoccupied or vacant premises (beyond 30/60/90 days, depending on jurisdiction)",
+        "Earthquake and flood (unless endorsed separately)"
+    ],
+    "Limits": {
+        "Per Risk Limit": "Up to $10M per location (subject to reinsurance and internal capacity)",
+        "Aggregate Limit": "As specified on policy schedule; typically unlimited unless catastrophe exposure",
+        "Business Interruption Limit": "Commonly 12, 18, or 24 months of indemnity period"
+    },
+    "Deductibles": {
+        "Minimum Deductible": "$1,000 per occurrence (higher for high-risk or catastrophe zones)",
+        "Catastrophic Perils (Flood, EQ)": "2%\u20135% of Total Insured Value (TIV), subject to minimum (e.g., $25,000)",
+        "Theft/Water Damage": "May carry sub-limits or higher deductibles based on risk profile"
+    },
+    "Pricing Factors": {
+        "Construction Type": "Fire-resistive, non-combustible, or wood frame",
+        "Occupancy": "Type of business activity (e.g., manufacturing, warehousing)",
+        "Protection": "Sprinkler systems, fire alarms, security systems",
+        "Exposure": "Proximity to other risk-prone structures or areas (e.g., gas stations, flood plains)",
+        "Claims History": "Prior losses or frequency/severity of claims",
+        "Location": "Zip code risk score, wildfire/flood/earthquake zones",
+        "Maintenance & Housekeeping": "Physical condition of property, history of inspections",
+        "Coverage Scope": "Limits, endorsements, time element coverages",
+        "Business Continuity Planning": "Existence of recovery plans, redundancies"
+    }
+}
