@@ -1,5 +1,5 @@
 # Ignore your local data, but keep folder
-data/*.pdf
+data/**
 !data/.gitkeep
 
 # Ignore vector store files in anna's storage
