@@ -31,38 +31,87 @@ jobs:
           # Create a clean deployment directory
           mkdir -p deploy
           
-          # Backup the original server.js
-          cp .next/standalone/server.js .next/standalone/original-server.js
-          
-          # Create a custom server.js that ensures proper paths
-          cat > .next/standalone/server.js << 'EOL'
-          // Ensure proper environment
-          process.env.NODE_ENV = 'production';
-          
-          // Log startup info
-          console.log('Starting Next.js in production mode');
-          console.log('Current directory:', process.cwd());
-          
-          // Load the original server with proper path handling
-          require('./original-server.js');
+          # Create .env file with environment variables to fix asset paths
+          cat > .next/standalone/.env << 'EOL'
+          NODE_ENV=production
+          NEXT_ASSET_PREFIX=
           EOL
           
-          # Copy the modified standalone directory
+          # Copy standalone output to the deployment directory
           cp -r .next/standalone/* deploy/
           
-          # Create proper .next directory structure in deploy
-          mkdir -p deploy/.next/static
-          cp -r .next/static/* deploy/.next/static/
+          # Create .next directory with correct structure
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/
           
-          # Ensure public assets are copied
-          cp -r public deploy/
-          
-          # Add essential Next.js files
+          # Ensure BUILD_ID file is present
           cp .next/BUILD_ID deploy/.next/
           
-          # List deployment contents for debugging
-          echo "Deployment structure:"
+          # Copy required Next.js json files to .next
+          cp -r .next/*.json deploy/.next/
+          
+          # Copy public folder for static assets
+          cp -r public deploy/
+          
+          # Create a simple script to serve static files from the correct path
+          cat > deploy/fix-paths.js << 'EOL'
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Read the original server.js file
+          const serverJsPath = path.join(__dirname, 'server.js');
+          let serverJs = fs.readFileSync(serverJsPath, 'utf8');
+          
+          // Modify the server.js to log all requests
+          const patchedServerJs = `
+          const http = require('http');
+          const originalCreateServer = http.createServer;
+          
+          // Patch HTTP server creation to log requests
+          http.createServer = function(...args) {
+            const server = originalCreateServer.apply(this, args);
+            const originalListener = server.listeners('request')[0];
+            
+            server.removeAllListeners('request');
+            server.on('request', (req, res) => {
+              console.log('Request:', req.method, req.url);
+              
+              // Set proper MIME types for CSS files
+              if (req.url.endsWith('.css')) {
+                res.setHeader('Content-Type', 'text/css');
+              }
+              
+              return originalListener(req, res);
+            });
+            
+            return server;
+          };
+          
+          // Set environment variables
+          process.env.NODE_ENV = 'production';
+          process.chdir(__dirname);
+          
+          // Log directories for debugging
+          console.log('Current directory:', process.cwd());
+          console.log('Directory contents:', require('fs').readdirSync('.'));
+          console.log('.next exists:', require('fs').existsSync('.next'));
+          
+          // Load the original server
+          ${serverJs}
+          `;
+          
+          // Write the patched server.js back
+          fs.writeFileSync(serverJsPath, patchedServerJs);
+          console.log('Successfully patched server.js');
+          EOL
+          
+          # List deployment directory for debugging
+          echo "Deployment directory structure:"
           find deploy -type d | sort
+          
+          # Find and list CSS files in the deployment
+          echo "CSS files in deployment:"
+          find deploy -name "*.css" | sort
 
       - name: Zip deployment package
         run: |
@@ -100,3 +149,4 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7E95D2038D794DFEB25E3F14A04E81B2 }}
+          startup-command: "node fix-paths.js && node server.js"
