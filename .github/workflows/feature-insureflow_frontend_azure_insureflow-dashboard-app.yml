@@ -27,11 +27,12 @@ jobs:
 
       - name: Prepare app for deployment
         run: |
-          mkdir build
+          mkdir -p build/.next/static
           cp -r .next/standalone/* build/
-          cp -r .next/static build/.next/static
+          cp -r .next/static/* build/.next/static/
           cp -r public build/public
           cp package.json build/
+
 
       - name: Zip deployment package
         run: |
