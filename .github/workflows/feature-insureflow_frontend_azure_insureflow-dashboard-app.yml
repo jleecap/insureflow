@@ -26,11 +26,9 @@ jobs:
       - name: Build Next.js app (standalone)
         run: npm run build
 
-      - name: Prepare build output in root for Azure
+      - name: Prepare output for Azure deployment
         run: |
-          mkdir -p .next/static
           cp -r .next/standalone/* .
-          cp -r .next/static/* .next/static/
           cp -r public .
           cp package.json .
 
