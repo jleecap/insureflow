@@ -28,8 +28,8 @@ jobs:
 
       - name: Prepare clean build output for Azure
         run: |
-          mkdir deploy
-          cp -r .next/standalone/* deploy/
+          mkdir -p deploy/.next/standalone
+          cp -r .next/standalone/* deploy/.next/standalone/
           cp -r public deploy/
           cp package.json deploy/
 
