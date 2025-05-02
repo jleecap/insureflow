@@ -31,24 +31,38 @@ jobs:
           # Create a clean deployment directory
           mkdir -p deploy
           
-          # Copy server.js to root
-          cp .next/standalone/server.js deploy/
+          # Backup the original server.js
+          cp .next/standalone/server.js .next/standalone/original-server.js
           
-          # Copy node_modules if needed
-          cp -r .next/standalone/node_modules deploy/
+          # Create a custom server.js that ensures proper paths
+          cat > .next/standalone/server.js << 'EOL'
+          // Ensure proper environment
+          process.env.NODE_ENV = 'production';
           
-          # Copy the entire .next folder as-is
-          cp -r .next deploy/
+          // Log startup info
+          console.log('Starting Next.js in production mode');
+          console.log('Current directory:', process.cwd());
           
-          # Copy public folder for static assets
+          // Load the original server with proper path handling
+          require('./original-server.js');
+          EOL
+          
+          # Copy the modified standalone directory
+          cp -r .next/standalone/* deploy/
+          
+          # Create proper .next directory structure in deploy
+          mkdir -p deploy/.next/static
+          cp -r .next/static/* deploy/.next/static/
+          
+          # Ensure public assets are copied
           cp -r public deploy/
           
-          # Copy package.json
-          cp package.json deploy/
+          # Add essential Next.js files
+          cp .next/BUILD_ID deploy/.next/
           
-          # Create a startup script
-          echo "NODE_ENV=production node server.js" > deploy/startup.sh
-          chmod +x deploy/startup.sh
+          # List deployment contents for debugging
+          echo "Deployment structure:"
+          find deploy -type d | sort
 
       - name: Zip deployment package
         run: |
