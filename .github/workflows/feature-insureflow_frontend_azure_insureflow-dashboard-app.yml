@@ -30,6 +30,9 @@ jobs:
         run: |
           mkdir -p deploy/.next/standalone
           cp -r .next/standalone/* deploy/.next/standalone/
+          mkdir -p deploy/.next/static
+          cp -r .next/static deploy/.next/
+          cp .next/BUILD_ID deploy/.next/
           cp -r public deploy/
           cp package.json deploy/
 
