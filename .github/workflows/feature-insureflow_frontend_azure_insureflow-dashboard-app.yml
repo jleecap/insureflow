@@ -28,98 +28,32 @@ jobs:
 
       - name: Prepare deployment package
         run: |
-          # Create a clean deployment directory
+          # Create clean deployment directory
           mkdir -p deploy
-          
-          # Create .env file with environment variables
-          cat > .next/standalone/.env << 'EOL'
-          NODE_ENV=production
-          EOL
-          
-          # Backup original server.js
-          cp .next/standalone/server.js .next/standalone/original-server.js
-          
-          # Create a modified server.js with CSS fixes directly embedded
-          cat > .next/standalone/server.js << 'EOL'
-          // Patched server.js for CSS handling
-          const fs = require('fs');
-          const path = require('path');
-          const http = require('http');
-          
-          // Set environment variables
-          process.env.NODE_ENV = 'production';
-          
-          // Debug information
-          console.log('Starting Next.js in production mode');
-          console.log('Current directory:', process.cwd());
-          console.log('Directory contents:', fs.readdirSync('.'));
-          console.log('.next exists:', fs.existsSync('.next'));
-          
-          // Patch HTTP server to log requests and fix MIME types
-          const originalCreateServer = http.createServer;
-          http.createServer = function(...args) {
-            const server = originalCreateServer.apply(this, args);
-            
-            // Store original request listener
-            const originalListeners = server.listeners('request');
-            if (originalListeners.length > 0) {
-              const originalListener = originalListeners[0];
-              server.removeAllListeners('request');
-              
-              // Add our patched listener
-              server.on('request', (req, res) => {
-                console.log('Request:', req.method, req.url);
-                
-                // Set proper MIME types for CSS files
-                if (req.url.endsWith('.css')) {
-                  res.setHeader('Content-Type', 'text/css');
-                }
-                
-                // Call original listener
-                return originalListener(req, res);
-              });
-            }
-            
-            return server;
-          };
-          
-          // Load the original server code (excluding HTTP patching)
-          require('./original-server.js');
-          EOL
-          
-          # Copy all files from standalone to deploy
+
+          # ✅ Copy all standalone runtime files (including server.js)
           cp -r .next/standalone/* deploy/
-          
-          # Create proper .next directory structure
-          mkdir -p deploy/.next
-          cp -r .next/static deploy/.next/
-          
-          # Copy Build ID
-          cp .next/BUILD_ID deploy/.next/
-          
-          # Copy required configuration files
-          find .next -maxdepth 1 -name "*.json" -exec cp {} deploy/.next/ \;
-          
-          # Copy public directory
+
+          # ✅ Move static assets to top-level /static (not .next/static)
+          cp -r .next/static deploy/static
+
+          # ✅ Copy build metadata files to top-level
+          cp .next/BUILD_ID deploy/
+          find .next -maxdepth 1 -name "*.json" -exec cp {} deploy/ \;
+
+          # ✅ Copy public assets
           cp -r public deploy/
-          
-          # Create a next.config.js in the deploy directory to ensure correct asset paths
-          cat > deploy/next.config.js << 'EOL'
-          module.exports = {
-            output: 'standalone',
-            poweredByHeader: false,
-            reactStrictMode: true,
-            swcMinify: true
-          };
+
+          # ✅ Optionally set environment variables (e.g., PORT, NODE_ENV)
+          cat > deploy/.env << 'EOL'
+          NODE_ENV=production
+          PORT=8080
           EOL
-          
-          # List deployment structure
-          echo "Deployment structure (directories):"
-          find deploy -type d | sort
-          
-          # List CSS files
-          echo "CSS files in deployment:"
-          find deploy -name "*.css" | sort
+
+          # ✅ Print structure for debugging
+          echo "Final deployment structure:"
+          find deploy -type f | sort
+
 
       - name: Zip deployment package
         run: |
