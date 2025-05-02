@@ -31,30 +31,24 @@ jobs:
           # Create a clean deployment directory
           mkdir -p deploy
           
-          # Copy standalone directory contents to deploy root
-          cp -r .next/standalone/* deploy/
+          # Copy server.js to root
+          cp .next/standalone/server.js deploy/
           
-          # Create .next directory structure
-          mkdir -p deploy/.next
+          # Copy node_modules if needed
+          cp -r .next/standalone/node_modules deploy/
           
-          # Copy BUILD_ID
-          cp .next/BUILD_ID deploy/.next/
+          # Copy the entire .next folder as-is
+          cp -r .next deploy/
           
-          # Copy static assets to correct location for serving
-          cp -r .next/static deploy/.next/
-          
-          # Copy public directory for static assets 
+          # Copy public folder for static assets
           cp -r public deploy/
           
-          # Create proper server.js path reference
-          echo "console.log('Starting Next.js in production mode');" > deploy/server-wrapper.js
-          echo "process.env.NODE_ENV = 'production';" >> deploy/server-wrapper.js
-          echo "process.chdir(__dirname);" >> deploy/server-wrapper.js
-          echo "require('./server.js');" >> deploy/server-wrapper.js
+          # Copy package.json
+          cp package.json deploy/
           
-          # List directories for debugging
-          echo "Deployment package structure:"
-          find deploy -type d | sort
+          # Create a startup script
+          echo "NODE_ENV=production node server.js" > deploy/startup.sh
+          chmod +x deploy/startup.sh
 
       - name: Zip deployment package
         run: |
@@ -92,4 +86,3 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7E95D2038D794DFEB25E3F14A04E81B2 }}
-          startup-command: "node server-wrapper.js"
