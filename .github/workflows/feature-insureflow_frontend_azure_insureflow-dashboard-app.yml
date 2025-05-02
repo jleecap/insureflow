@@ -26,15 +26,27 @@ jobs:
       - name: Build Next.js app (standalone)
         run: npm run build
 
-      - name: Prepare clean build output for Azure
+      - name: Prepare deployment package
         run: |
-          mkdir -p deploy/.next/standalone
-          cp -r .next/standalone/* deploy/.next/standalone/
-          mkdir -p deploy/.next/static
+          # Create a deploy directory for a clean deployment
+          mkdir -p deploy
+          
+          # Copy the standalone output
+          cp -r .next/standalone/* deploy/
+          
+          # Create .next directory in the deployment package
+          mkdir -p deploy/.next
+          
+          # Copy static assets and required files
           cp -r .next/static deploy/.next/
           cp .next/BUILD_ID deploy/.next/
+          
+          # Copy public folder for static assets
           cp -r public deploy/
-          cp package.json deploy/
+          
+          # Create a startup command file for Azure
+          echo "node server.js" > deploy/startup.sh
+          chmod +x deploy/startup.sh
 
       - name: Zip deployment package
         run: |
