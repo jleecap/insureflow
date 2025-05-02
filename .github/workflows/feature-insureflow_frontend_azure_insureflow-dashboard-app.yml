@@ -31,85 +31,93 @@ jobs:
           # Create a clean deployment directory
           mkdir -p deploy
           
-          # Create .env file with environment variables to fix asset paths
+          # Create .env file with environment variables
           cat > .next/standalone/.env << 'EOL'
           NODE_ENV=production
-          NEXT_ASSET_PREFIX=
           EOL
           
-          # Copy standalone output to the deployment directory
-          cp -r .next/standalone/* deploy/
+          # Backup original server.js
+          cp .next/standalone/server.js .next/standalone/original-server.js
           
-          # Create .next directory with correct structure
-          mkdir -p deploy/.next
-          cp -r .next/static deploy/.next/
-          
-          # Ensure BUILD_ID file is present
-          cp .next/BUILD_ID deploy/.next/
-          
-          # Copy required Next.js json files to .next
-          cp -r .next/*.json deploy/.next/
-          
-          # Copy public folder for static assets
-          cp -r public deploy/
-          
-          # Create a simple script to serve static files from the correct path
-          cat > deploy/fix-paths.js << 'EOL'
+          # Create a modified server.js with CSS fixes directly embedded
+          cat > .next/standalone/server.js << 'EOL'
+          // Patched server.js for CSS handling
           const fs = require('fs');
           const path = require('path');
-          
-          // Read the original server.js file
-          const serverJsPath = path.join(__dirname, 'server.js');
-          let serverJs = fs.readFileSync(serverJsPath, 'utf8');
-          
-          // Modify the server.js to log all requests
-          const patchedServerJs = `
           const http = require('http');
-          const originalCreateServer = http.createServer;
           
-          // Patch HTTP server creation to log requests
+          // Set environment variables
+          process.env.NODE_ENV = 'production';
+          
+          // Debug information
+          console.log('Starting Next.js in production mode');
+          console.log('Current directory:', process.cwd());
+          console.log('Directory contents:', fs.readdirSync('.'));
+          console.log('.next exists:', fs.existsSync('.next'));
+          
+          // Patch HTTP server to log requests and fix MIME types
+          const originalCreateServer = http.createServer;
           http.createServer = function(...args) {
             const server = originalCreateServer.apply(this, args);
-            const originalListener = server.listeners('request')[0];
             
-            server.removeAllListeners('request');
-            server.on('request', (req, res) => {
-              console.log('Request:', req.method, req.url);
+            // Store original request listener
+            const originalListeners = server.listeners('request');
+            if (originalListeners.length > 0) {
+              const originalListener = originalListeners[0];
+              server.removeAllListeners('request');
               
-              // Set proper MIME types for CSS files
-              if (req.url.endsWith('.css')) {
-                res.setHeader('Content-Type', 'text/css');
-              }
-              
-              return originalListener(req, res);
-            });
+              // Add our patched listener
+              server.on('request', (req, res) => {
+                console.log('Request:', req.method, req.url);
+                
+                // Set proper MIME types for CSS files
+                if (req.url.endsWith('.css')) {
+                  res.setHeader('Content-Type', 'text/css');
+                }
+                
+                // Call original listener
+                return originalListener(req, res);
+              });
+            }
             
             return server;
           };
           
-          // Set environment variables
-          process.env.NODE_ENV = 'production';
-          process.chdir(__dirname);
-          
-          // Log directories for debugging
-          console.log('Current directory:', process.cwd());
-          console.log('Directory contents:', require('fs').readdirSync('.'));
-          console.log('.next exists:', require('fs').existsSync('.next'));
-          
-          // Load the original server
-          ${serverJs}
-          `;
-          
-          // Write the patched server.js back
-          fs.writeFileSync(serverJsPath, patchedServerJs);
-          console.log('Successfully patched server.js');
+          // Load the original server code (excluding HTTP patching)
+          require('./original-server.js');
           EOL
           
-          # List deployment directory for debugging
-          echo "Deployment directory structure:"
+          # Copy all files from standalone to deploy
+          cp -r .next/standalone/* deploy/
+          
+          # Create proper .next directory structure
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/
+          
+          # Copy Build ID
+          cp .next/BUILD_ID deploy/.next/
+          
+          # Copy required configuration files
+          find .next -maxdepth 1 -name "*.json" -exec cp {} deploy/.next/ \;
+          
+          # Copy public directory
+          cp -r public deploy/
+          
+          # Create a next.config.js in the deploy directory to ensure correct asset paths
+          cat > deploy/next.config.js << 'EOL'
+          module.exports = {
+            output: 'standalone',
+            poweredByHeader: false,
+            reactStrictMode: true,
+            swcMinify: true
+          };
+          EOL
+          
+          # List deployment structure
+          echo "Deployment structure (directories):"
           find deploy -type d | sort
           
-          # Find and list CSS files in the deployment
+          # List CSS files
           echo "CSS files in deployment:"
           find deploy -name "*.css" | sort
 
@@ -149,4 +157,3 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7E95D2038D794DFEB25E3F14A04E81B2 }}
-          startup-command: "node fix-paths.js && node server.js"
