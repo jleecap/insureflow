@@ -26,16 +26,19 @@ jobs:
       - name: Build Next.js app (standalone)
         run: npm run build
 
-      - name: Prepare output for Azure deployment
+      - name: Prepare clean build output for Azure
         run: |
-          cp -rT .next/standalone .
-          cp -r public .
+          mkdir deploy
+          cp -r .next/standalone/* deploy/
+          cp -r public deploy/
+          cp package.json deploy/
 
+      - name: Zip deployment package
+        run: |
+          cd deploy
+          zip -r ../release.zip .
 
-      - name: Zip artifact for deployment
-        run: zip -r release.zip .
-
-      - name: Upload artifact to deploy job
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
@@ -54,7 +57,7 @@ jobs:
         with:
           name: node-app
 
-      - name: Unzip artifact
+      - name: Unzip deployment package
         run: unzip release.zip
 
       - name: Deploy to Azure Web App
