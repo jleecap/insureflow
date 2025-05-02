@@ -28,9 +28,9 @@ jobs:
 
       - name: Prepare output for Azure deployment
         run: |
-          cp -r .next/standalone/* .
-          cp -r public .
-          cp package.json .
+            cp -r .next/standalone/* .
+            cp -r .next/static .next/standalone/.next/static
+            cp package.json .
 
       - name: Zip artifact for deployment
         run: zip -r release.zip .
