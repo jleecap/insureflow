@@ -1,0 +1,134 @@
+[
+  {
+    "insurance_broker": "ABC Insurance Brokers",
+    "date": "24 April 2025",
+    "insurance_company": "Lloyd’s Insurance",
+    "address": "100 Fenchurch Street, London, EC3M 5JD",
+    "recipient": "Mr. John Smith",
+    "subject": "Request for Property Insurance Quote for GreenTech Solutions Ltd.",
+    "client": "GreenTech Solutions Ltd.",
+    "property_information": {
+      "location": "55 Tech Drive, London, EC1A 1BB",
+      "type": "Commercial Office Building",
+      "construction": "Steel frame with brick exterior, built in 2010, no recent renovations",
+      "surface_area": "780 m²",
+      "occupancy": "Office space for 50 employees"
+    },
+    "coverage_requirements": {
+      "desired_coverage_amount": "£2,000,000",
+      "coverage_type": ["Fire", "theft", "third-party liability"],
+      "deductibles": "£1,000 per incident",
+      "additional_coverage": ["Business interruption", "flood protection"]
+    },
+    "risk_assessment": {
+      "fire_hazards": ["Sprinkler system installed", "regular fire drills"],
+      "natural_disasters": [
+        "Low flood risk area",
+        "not located near seismic fault lines"
+      ],
+      "security_measures": ["24/7 CCTV monitoring", "keycard access control"]
+    },
+    "financial_information": {
+      "property_value": "£2,500,000",
+      "business_revenue": "£8,000,000 annually"
+    },
+    "contact_person": {
+      "name": "James Carter",
+      "email": "james.carter@abcinsurance.com",
+      "phone": "020 7123 4567"
+    }
+  },
+  {
+    "insurance_broker": "XYZ Insurance Services",
+    "date": "24 April 2025",
+    "insurance_company": "Aviva Insurance",
+    "address": "70 St. Mary Axe, London, EC3A 8BG",
+    "recipient": "Mrs. Sarah Brown",
+    "subject": "Request for Property Insurance Quote for Coffee Heaven Ltd.",
+    "client": "Coffee Haven Ltd.",
+    "property_information": {
+      "type": "Commercial Coffee Shop and Retail Store",
+      "construction": "Traditional brick and mortar, built in 1998, recently renovated in 2024",
+      "surface_area": "250 m²",
+      "occupancy": "Coffee shop production on the ground floor, retail space on the first floor"
+    },
+    "coverage_requirements": {
+      "desired_coverage_amount": "£1,500,000",
+      "coverage_type": ["Fire", "theft", "third-party liability"],
+      "deductibles": "£750 per incident",
+      "additional_coverage": [
+        "Equipment breakdown",
+        "public liability",
+        "accidental damage"
+      ]
+    },
+    "risk_assessment": {
+      "fire_hazards": ["Industrial ovens in use", "sprinkler system in place"],
+      "natural_disasters": [
+        "Low flood risk",
+        "located in an area not prone to earthquakes"
+      ],
+      "security_measures": ["Alarm system", "24/7 security monitoring"]
+    },
+    "financial_information": {
+      "property_value": "£1,800,000",
+      "business_revenue": "£500,000 annually"
+    },
+    "contact_person": {
+      "name": "Emma Wilson",
+      "email": "emma.wilson@xyzinsurance.com",
+      "phone": "0121 234 5678"
+    }
+  },
+  {
+    "insurance_broker": "Prime Insurance Brokers",
+    "date": "24 April 2025",
+    "insurance_company": "Al Ameen Insurance",
+    "address": "Office 801, Saffar Tower, Valiasr Street, Tehran, Iran",
+    "recipient": "Mr. David Thompson",
+    "subject": "Request for Property Insurance Quote for Parsian Evin Hotel Ltd.",
+    "client": "Parsian Evin Hotel Ltd.",
+    "property_information": {
+      "location": "No. 45, Evin Street, Tehran, Iran",
+      "type": "Hotel",
+      "construction": "Modern design, reinforced concrete and steel, built in 2010, no recent renovations",
+      "surface_area": "11,500 m²",
+      "occupancy": "150-room hotel, luxury restaurant, and conference facilities"
+    },
+    "coverage_requirements": {
+      "desired_coverage_amount": "IRR 800,000,000,000",
+      "coverage_type": ["Fire", "theft", "guest property"],
+      "deductibles": "IRR 500,000,000 per incident",
+      "additional_coverage": [
+        "Business interruption",
+        "loss of revenue due to closure",
+        "third-party liability"
+      ]
+    },
+    "risk_assessment": {
+      "fire_hazards": [
+        "Fire alarm and sprinkler system in all rooms",
+        "fire exits clearly marked"
+      ],
+      "natural_disasters": [
+        "Low flood risk",
+        "not located in an earthquake-prone area",
+        "occasional sandstorms"
+      ],
+      "security_measures": [
+        "CCTV surveillance",
+        "24/7 security personnel",
+        "secure entry systems"
+      ]
+    },
+    "financial_information": {
+      "property_value": "IRR 1,000,000,000,000",
+      "business_revenue": "IRR 300,000,000,000 annually"
+    },
+    "contact_person": {
+      "name": "Oliver Green",
+      "email": "oliver.green@primeinsurance.com",
+      "phone": "+971 4 234 5678"
+    }
+  }
+]

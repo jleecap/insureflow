@@ -1,0 +1,157 @@
+[
+    {
+        "Flagged Country": "Democratic People's Republic of Korea",
+        "FATF Status": "Black List",
+        "Reason": "Sanctions, AML/CFT non-compliance"
+    },
+    {
+        "Flagged Country": "Iran",
+        "FATF Status": "Black List",
+        "Reason": "Terrorism financing, sanctions"
+    },
+    {
+        "Flagged Country": "Myanmar (Burma)",
+        "FATF Status": "Black List",
+        "Reason": "Military regime, AML concerns"
+    },
+    {
+        "Flagged Country": "Russia",
+        "FATF Status": "Sanctioned",
+        "Reason": "EU/UK/US sanctions, geopolitical risk"
+    },
+    {
+        "Flagged Country": "Belarus",
+        "FATF Status": "Sanctioned",
+        "Reason": "EU/UK/US sanctions"
+    },
+    {
+        "Flagged Country": "Cuba",
+        "FATF Status": "Sanctioned",
+        "Reason": "US Sanctions, limited financial transparency"
+    },
+    {
+        "Flagged Country": "Algeria",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Angola",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Bulgaria",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Burkina Faso",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Cameroon",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Côte d'Ivoire",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Croatia",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Democratic Republic of Congo",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Haiti",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Kenya",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Lao People's Democratic Republic",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Lebanon",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Mali",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Monaco",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Mozambique",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Namibia",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Nepal",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Nigeria",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "South Africa",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "South Sudan",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Syria",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Tanzania",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Venezuela",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Vietnam",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    },
+    {
+        "Flagged Country": "Yemen",
+        "FATF Status": "Grey List",
+        "Reason": "Strategic deficiencies in AML/CFT frameworks"
+    }
+]
