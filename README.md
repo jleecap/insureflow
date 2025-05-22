@@ -1,2 +1,2 @@
-# insureflow
-An agentic solution to automate insurance submission to binding 
+# BrokerBuddy
+GenAI for Insurance
