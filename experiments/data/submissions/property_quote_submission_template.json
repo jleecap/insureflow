@@ -1,0 +1,70 @@
+{
+    "Property Information": [
+        {
+            "Field Name": "Business Name",
+            "Field Type": "Numeric and letters"
+        },
+        {
+            "Field Name": "Location",
+            "Field Type": "Numeric and letters"
+        },
+        {
+            "Field Name": "Type",
+            "Field Type": "Text"
+        },
+        {
+            "Field Name": "Construction",
+            "Field Type": "Text"
+        },
+        {
+            "Field Name": "Surface Area",
+            "Field Type": "Numeric"
+        },
+        {
+            "Field Name": "Occupancy",
+            "Field Type": "Text"
+        }
+    ],
+    "Coverage details": [
+        {
+            "Field Name": "Desired Coverage Amount",
+            "Field Type": "Numeric and Currency symbol"
+        },
+        {
+            "Field Name": "Coverage Type",
+            "Field Type": "Text"
+        },
+        {
+            "Field Name": "Deductibles",
+            "Field Type": "Numeric and Currency symbol"
+        },
+        {
+            "Field Name": "Additional Coverage",
+            "Field Type": "Text"
+        }
+    ],
+    "Risk Assessment": [
+        {
+            "Field Name": "Fire hazzards",
+            "Field Type": "Text"
+        },
+        {
+            "Field Name": "Natural disasters",
+            "Field Type": "Text"
+        },
+        {
+            "Field Name": "Security measures",
+            "Field Type": "Text"
+        }
+    ],
+    "Financial Information": [
+        {
+            "Field Name": "Property Value",
+            "Field Type": "Numeric and Currency symbol"
+        },
+        {
+            "Field Name": "Business Revenue",
+            "Field Type": "Numeric and Currency symbol"
+        }
+    ]
+}
