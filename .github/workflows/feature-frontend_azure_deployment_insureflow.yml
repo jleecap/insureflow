@@ -28,11 +28,11 @@ jobs:
         run: npm run build
         working-directory: apps/web
 
-      - name: Prepare standalone build output
+      - name: Prepare standalone output
         run: |
           mkdir -p output/.next/static
           cp -r .next/standalone/* output/
-          cp -r .next/static output/.next/static
+          cp -r .next/static/* output/.next/static
           cp -r public output/public || true
         working-directory: apps/web
 
@@ -40,7 +40,7 @@ jobs:
         run: zip -r release.zip .
         working-directory: apps/web/output
 
-      - name: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-app
@@ -51,16 +51,17 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download build artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: next-app
 
-      - name: Unzip artifact
-        run: unzip release.zip
+      - name: Unzip artifact to deploy folder
+        run: |
+          mkdir deploy
+          unzip release.zip -d deploy
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -69,4 +70,4 @@ jobs:
           app-name: 'insureflow'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8E94B03F7134D30BE4F581FD70EC6C3 }}
-          package: .
+          package: deploy
