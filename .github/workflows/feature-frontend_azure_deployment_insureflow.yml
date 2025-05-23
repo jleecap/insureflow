@@ -30,22 +30,22 @@ jobs:
 
       - name: Prepare standalone output
         run: |
-          mkdir -p output/.next/static
-          cp -r .next/standalone/* output/
-          cp -r .next/static/* output/.next/static
-          cp -r public output/public || true
-          cp package.json output/
+          mkdir -p standalone-deploy/.next/static
+          cp -r .next/standalone/* standalone-deploy/
+          cp -r .next/static/* standalone-deploy/.next/static
+          cp -r public standalone-deploy/public || true
+          cp package.json standalone-deploy/
         working-directory: apps/web
 
       - name: Zip deployment package
         run: zip -r release.zip .
-        working-directory: apps/web/output
+        working-directory: apps/web/standalone-deploy
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-app
-          path: apps/web/output/release.zip
+          path: apps/web/standalone-deploy/release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,11 +58,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: next-app
+          path: deploy
 
       - name: Unzip artifact to deploy folder
-        run: |
-          mkdir deploy
-          unzip release.zip -d deploy
+        run: unzip deploy/release.zip -d deploy/app
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -71,4 +70,4 @@ jobs:
           app-name: 'insureflow'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8E94B03F7134D30BE4F581FD70EC6C3 }}
-          package: deploy
+          package: deploy/app
