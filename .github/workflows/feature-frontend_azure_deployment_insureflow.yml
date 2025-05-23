@@ -30,7 +30,7 @@ jobs:
 
       - name: Prepare standalone build output
         run: |
-          mkdir -p output
+          mkdir -p output/.next/static
           cp -r .next/standalone/* output/
           cp -r .next/static output/.next/static
           cp -r public output/public || true
