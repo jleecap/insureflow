@@ -7,18 +7,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -28,46 +27,23 @@ jobs:
         run: npm run build
         working-directory: apps/web
 
-      - name: Prepare standalone output
+      - name: Prepare standalone build output
         run: |
-          mkdir -p standalone-deploy/.next/static
-          cp -r .next/standalone/* standalone-deploy/
-          cp -r .next/static/* standalone-deploy/.next/static
-          cp -r public standalone-deploy/public || true
-          cp package.json standalone-deploy/
-        working-directory: apps/web
+          mkdir -p deploy/.next/static
+          cp -r apps/web/.next/standalone/* deploy/
+          cp -r apps/web/.next/static/* deploy/.next/static
+          cp -r apps/web/public deploy/public || true
+          cp apps/web/package.json deploy/
+        shell: bash
 
-      - name: Zip deployment package
-        run: zip -r release.zip .
-        working-directory: apps/web/standalone-deploy
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-app
-          path: apps/web/standalone-deploy/release.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: next-app
-          path: deploy
-
-      - name: Unzip artifact to deploy folder
-        run: unzip deploy/release.zip -d deploy/app
+      - name: Zip deployable app
+        run: zip -r deploy.zip .
+        working-directory: deploy
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'insureflow'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8E94B03F7134D30BE4F581FD70EC6C3 }}
-          package: deploy/app
+          package: deploy/deploy.zip
