@@ -1,0 +1,49 @@
+name: Build and deploy Node.js app to Azure Web App - insureflow
+
+on:
+  push:
+    branches:
+      - feature/frontend_azure_deployment
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: apps/web
+
+      - name: Build Next.js app
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Prepare standalone build output
+        run: |
+          mkdir -p deploy/.next/static
+          cp -r apps/web/.next/standalone/* deploy/
+          cp -r apps/web/.next/static/* deploy/.next/static
+          cp -r apps/web/public deploy/public || true
+          cp apps/web/package.json deploy/
+        shell: bash
+
+      - name: Zip deployable app
+        run: zip -r deploy.zip .
+        working-directory: deploy
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'insureflow'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8E94B03F7134D30BE4F581FD70EC6C3 }}
+          package: deploy/deploy.zip
