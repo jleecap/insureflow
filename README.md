@@ -1,2 +1,2 @@
-# BrokerBuddy
+# InsureFlow
 GenAI for Insurance
