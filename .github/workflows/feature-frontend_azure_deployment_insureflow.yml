@@ -71,4 +71,4 @@ jobs:
           app-name: 'insureflow'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8E94B03F7134D30BE4F581FD70EC6C3 }}
-          package: apps/web/output/release.zip
+          package: deploy
