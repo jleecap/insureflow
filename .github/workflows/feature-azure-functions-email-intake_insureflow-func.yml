@@ -21,19 +21,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+      - name: Set up virtual environment and install dependencies
         working-directory: apps/azure_functions
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Install Azure Functions Core Tools
-        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
-
-      - name: Deploy Azure Function using publish profile
-        uses: azure/functions-action@v1
+      - name: Azure Login (via publish profile)
+        uses: azure/login@v1
         with:
-          app-name: insureflow-func
-          package: apps/azure_functions
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_697A070FDF244857A0D1D8896A1F6CCE }}
+
+      - name: Deploy using func CLI
+        working-directory: apps/azure_functions
+        run: |
+          source venv/bin/activate
+          func azure functionapp publish insureflow-func --python
+       
