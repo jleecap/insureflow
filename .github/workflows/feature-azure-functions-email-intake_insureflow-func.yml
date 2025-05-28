@@ -31,14 +31,12 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Azure Login (via publish profile)
-        uses: azure/login@v1
-        with:
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_697A070FDF244857A0D1D8896A1F6CCE }}
+      - name: Write publish profile to file
+        run: echo "${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_697A070FDF244857A0D1D8896A1F6CCE }}" > publish_profile.publishsettings
 
       - name: Deploy using func CLI
         working-directory: apps/azure_functions
         run: |
           source venv/bin/activate
-          func azure functionapp publish insureflow-func --python
+          func azure functionapp publish insureflow-func --publish-profile ../../publish_profile.publishsettings --python
        
