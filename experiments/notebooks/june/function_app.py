@@ -17,31 +17,37 @@ from llama_index.core.agent.workflow import (
     AgentStream,
 )
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+import asyncio
+import aiofiles
 
 #############################################################################################################################
 # INITIALISE LLM AND EMBEDDING MODELS
 #############################################################################################################################
 
 # Load environment variables from .env file
-load_dotenv(r"C:\Users\junlee\Documents\insureflow\experiments\notebooks\june\.env")
+load_dotenv(dotenv_path = "C:/Users/junlee/Documents/insureflow/experiments/notebooks/june/.env")
 
 # for Azure OpenAI model
 api_key = os.getenv('AZURE_OPENAI_API_KEY')
 azure_endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
 gpt_api_version = os.getenv('AZURE_GPT_API_VERSION')
+gpt_model_name = os.getenv('AZURE_GPT_MODEL_NAME')
+gpt_deployment_name = os.getenv('AZURE_GPT_DEPLOYMENT_NAME')
 embedding_api_version = os.getenv('AZURE_EMBEDDING_API_VERSION')
+embedding_model_name = os.getenv('AZURE_EMBEDDING_MODEL_NAME')
+embedding_deployment_name = os.getenv('AZURE_EMBEDDING_DEPLOYMENT_NAME')
 
 # Initialize the LLM and embedding model
 llm = AzureOpenAI(
-    model="gpt-4o",
-    deployment_name="gpt-4o",
+    model=gpt_model_name,
+    deployment_name=gpt_deployment_name,
     api_key=api_key,
     azure_endpoint=azure_endpoint,
     api_version=gpt_api_version,
 )
 embed_model = AzureOpenAIEmbedding(
-    model="text-embedding-3-small",
-    deployment_name="text-embedding-3-small",
+    model=embedding_model_name,
+    deployment_name=embedding_deployment_name,
     api_key=api_key,
     azure_endpoint=azure_endpoint,
     api_version=embedding_api_version,
@@ -54,12 +60,11 @@ Settings.embed_model = embed_model
 # USER-DEFINE FUNCTIONS
 #############################################################################################################################
 
-
 async def read_property_template_data() -> str:
     """Read template from JSON file and return it as text."""
     try:
-        with open("../data/submissions/property_quote_submission_template.json", "r") as file:
-            data = json.load(file)
+        with open("../../data/submissions/property_quote_submission_template.json", "r") as file:
+            data = json.load(file)  
         
         # Convert JSON data to formatted text
         result = []
@@ -74,7 +79,7 @@ async def read_property_template_data() -> str:
         return "\n".join(result)
     except Exception as e:
         return f"Error reading JSON file: {str(e)}"
-    
+
 async def record_notes(ctx: Context, notes: str, notes_title: str) -> str:
     """Useful for recording notes based on triage. Your input should be notes with a title to save the notes under."""
     current_state = await ctx.get("state")
@@ -101,7 +106,7 @@ async def read_existing_submissions() -> str:
     
     """Read existing quote submissions stored in JSON format and return it as text."""
     try:
-        with open("../data/submissions/mock_duplicate_submissions.json", "r") as file:
+        with open("../../data/submissions/mock_duplicate_submissions.json", "r") as file:
             data = json.load(file)
         # Print the JSON structure for debugging
         print(f"Found {len(data)} submissions in the database")
@@ -150,10 +155,9 @@ async def move_to_next_stage() -> str:
     return "Moving to next stage."
 
 async def read_dun_and_bradstreet() -> str:
-    
     """Read existing dun and bradstreet sample data in JSON format and return it as text."""
     try:
-        with open("../data/stage3/dun&bradstreet.json", "r") as file:
+        with open("../../data/stage3/dun&bradstreet.json", "r") as file:
             data = json.load(file)
         # Print the JSON structure for debugging
         print(f"Found {len(data)} submissions in the database")
@@ -183,7 +187,37 @@ async def read_internal_company_check() -> str:
     
     """Read internal company check sample data in JSON format and return it as text."""
     try:
-        with open("../data/stage3/internalcompanycheck.json", "r") as file:
+        with open("../../data/stage3/internalcompanycheck.json", "r") as file:
+            data = json.load(file)
+        # Print the JSON structure for debugging
+        print(f"Found {len(data)} submissions in the database")
+                
+        # If the data is a list of submissions instead of a dictionary
+        if isinstance(data, list):
+            formatted_data = {}
+            for i, submission in enumerate(data):
+                formatted_data[f"Submission_{i+1}"] = submission
+            data = formatted_data
+
+            # Convert JSON data to formatted text
+            result = []
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    result.append(f"{key}:")
+                    for sub_key, sub_value in value.items():
+                        result.append(f"  {sub_key}: {sub_value}")
+                else:
+                    result.append(f"{key}: {value}")
+            
+            return "\n".join(result)
+    except Exception as e:
+        return f"Error reading JSON file: {str(e)}"
+
+async def read_companies_house() -> str:
+    
+    """Read companies house sample data in JSON format and return it as text."""
+    try:
+        with open("../../data/stage3/companyhouse.json", "r") as file:
             data = json.load(file)
         # Print the JSON structure for debugging
         print(f"Found {len(data)} submissions in the database")
@@ -213,37 +247,7 @@ async def read_companies_house() -> str:
     
     """Read companies house sample data in JSON format and return it as text."""
     try:
-        with open("../data/stage3/companyhouse.json", "r") as file:
-            data = json.load(file)
-        # Print the JSON structure for debugging
-        print(f"Found {len(data)} submissions in the database")
-                
-        # If the data is a list of submissions instead of a dictionary
-        if isinstance(data, list):
-            formatted_data = {}
-            for i, submission in enumerate(data):
-                formatted_data[f"Submission_{i+1}"] = submission
-            data = formatted_data
-
-            # Convert JSON data to formatted text
-            result = []
-            for key, value in data.items():
-                if isinstance(value, dict):
-                    result.append(f"{key}:")
-                    for sub_key, sub_value in value.items():
-                        result.append(f"  {sub_key}: {sub_value}")
-                else:
-                    result.append(f"{key}: {value}")
-            
-            return "\n".join(result)
-    except Exception as e:
-        return f"Error reading JSON file: {str(e)}"
-    
-async def read_companies_house() -> str:
-    
-    """Read companies house sample data in JSON format and return it as text."""
-    try:
-        with open("../data/stage3/companyhouse.json", "r") as file:
+        with open("../../data/stage3/companyhouse.json", "r") as file:
             data = json.load(file)
         # Print the JSON structure for debugging
         print(f"Found {len(data)} submissions in the database")
@@ -273,7 +277,7 @@ async def read_company_database() -> str:
     
     """Read companies house sample data in JSON format and return it as text."""
     try:
-        with open("../data/stage3/companydatabase.json", "r") as file:
+        with open("../../data/stage3/companydatabase.json", "r") as file:
             data = json.load(file)
         # Print the JSON structure for debugging
         print(f"Found {len(data)} submissions in the database")
@@ -323,7 +327,7 @@ async def move_to_next_stage() -> str:
     return "Moving to next stage."
 
 # Load the documents from the directory
-documents = SimpleDirectoryReader(input_dir="../data/stage4/").load_data()
+documents = SimpleDirectoryReader(input_dir="../../data/stage4/").load_data()
 index = VectorStoreIndex.from_documents(documents)
 retriever = index.as_retriever(similarity_top_k=10)
 
@@ -757,9 +761,9 @@ research_email_agent = FunctionAgent(
 #############################################################################################################################
 
 # Define the Azure Function App
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 @app.route(route="agentic_stage_1")
-def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
+async def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
     
     """HTTP trigger function to run the agent workflow for insurance quote submission triage."""
     logging.info('Processing a request to run the agent workflow for insurance quote submission triage.')
@@ -773,6 +777,7 @@ def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
             "customer_email": "not drafted yet."
         },
     )
+    logging.info('Defined agent workflow')
 
     # Initialize the agent workflow with the user message
     handler = agent_workflow.run(
@@ -826,6 +831,8 @@ def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
         )
     )
 
+    logging.info('Defined handler')
+
     current_agent = None
     current_tool_calls = ""
 
@@ -837,391 +844,391 @@ def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
             ):
                 current_agent = event.current_agent_name
                 print(f"\n{'='*50}")
-                print(f"🤖 Agent: {current_agent}")
+                print(f"Agent: {current_agent}")
                 print(f"{'='*50}\n")
 
             if isinstance(event, AgentStream):
                 if event.delta:
                     print(event.delta, end="", flush=True)
             elif isinstance(event, AgentInput):
-                print("\n📥 Input:", event.input)
+                print("\nInput:", event.input)
 
             elif isinstance(event, AgentOutput):
                 if event.response.content:
-                    print("\n 📤 Output:", event.response.content)
+                    print("\nOutput:", event.response.content)
                 if event.tool_calls:
                     print(
-                        "\n🛠️  Planning to use tools:",
+                        "\nPlanning to use tools:",
                         [call.tool_name for call in event.tool_calls],
                     )
             elif isinstance(event, ToolCallResult):
-                print(f"🔧 Tool Result ({event.tool_name}):")
-                print(f"  Arguments: {event.tool_kwargs}")
-                print(f"  Output: {event.tool_output}")
+                print(f"Tool Result ({event.tool_name}):")
+                print(f"Arguments: {event.tool_kwargs}")
+                print(f"Output: {event.tool_output}")
             elif isinstance(event, ToolCall):
-                print(f"🔨 Calling Tool: {event.tool_name}")
-                print(f"  With arguments: {event.tool_kwargs}")
+                print(f"Calling Tool: {event.tool_name}")
+                print(f"With arguments: {event.tool_kwargs}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
 
     response = await handler
 
-    return response
+    return func.HttpResponse(body = "Agentic Stage 1 complete", status_code = 200)
 
-#############################################################################################################################
-# STAGE 2: AGENTIC DUPLICATE CHECK FOR INSURANCE QUOTE SUBMISSION
-#############################################################################################################################
+# #############################################################################################################################
+# # STAGE 2: AGENTIC DUPLICATE CHECK FOR INSURANCE QUOTE SUBMISSION
+# #############################################################################################################################
 
-@app.route(route="agentic_stage_2")
-def agentic_stage_2(req: func.HttpRequest) -> func.HttpResponse:
+# @app.route(route="agentic_stage_2")
+# def agentic_stage_2(req: func.HttpRequest) -> func.HttpResponse:
     
-    """HTTP trigger function to run the agent workflow for insurance quote submission duplicate check."""
-    logging.info('Processing a request to run the agent workflow for insurance quote submission duplicate check.')
+#     """HTTP trigger function to run the agent workflow for insurance quote submission duplicate check."""
+#     logging.info('Processing a request to run the agent workflow for insurance quote submission duplicate check.')
     
-    # Define the agent workflow with the agents and initial state
-    agent_workflow = AgentWorkflow(
-        agents=[duplicate_check_agent, duplicate_check_email_agent],
-        root_agent=duplicate_check_agent.name,
-        initial_state={
-            "triage_notes": {},
-            "customer_email": "not drafted yet."
-        },
-    )
+#     # Define the agent workflow with the agents and initial state
+#     agent_workflow = AgentWorkflow(
+#         agents=[duplicate_check_agent, duplicate_check_email_agent],
+#         root_agent=duplicate_check_agent.name,
+#         initial_state={
+#             "triage_notes": {},
+#             "customer_email": "not drafted yet."
+#         },
+#     )
 
-    handler = agent_workflow.run(
-        user_msg=(
-            """
-            Please triage the following property insurance quote submission from a broker:
-            {
-            "insurance_broker": "ABC Insurance Brokers",
-            "date": "24-04-2025",
-            "insurance_company": "Lloyd’s Insurance",
-            "address": "100 Fenchurch Street, London, EC3M 5JD",
-            "recipient": "Mr. John Smith",
-            "subject": "Request for Property Insurance Quote for GreenTech Solutions Ltd.",
-            "client": "GreenTech Solutions Ltd.",
-            "property_information": {
-            "location": "55 Tech Drive, London, EC1A 1BB",
-            "type": "Commercial Office Building",
-            "construction": "Steel frame with brick exterior, built in 2010, no recent renovations",
-            "surface_area": "780 meter square",
-            "occupancy": "Office space for 50 employees"
-            },
-            "coverage_requirements": {
-            "desired_coverage_amount": "£2,000,000",
-            "coverage_type": ["Fire", "theft", "third-party liability"],
-            "deductibles": "£1,000 per incident",
-            "additional_coverage": ["Business interruption", "flood protection"]
-            },
-            "risk_assessment": {
-            "fire_hazards": ["Sprinkler system installed", "regular fire drills"],
-            "natural_disasters": [
-                "Low flood risk area",
-                "not located near seismic fault lines"
-            ],
-            "security_measures": ["24/7 CCTV monitoring", "keycard access control"]
-            },
-            "financial_information": {
-            "property_value": "£2.5M",
-            "business_revenue": "£8M annually"
-            },
-            "contact_person": {
-            "name": "James Carter",
-            "email": "james.carter@abcinsurance.com",
-            "phone": "020 7123 4567"
-            }
-        }
-            Please analyze this submission and determine if it is a duplicate of an existing submission.
-            """
-        )
-    )
+#     handler = agent_workflow.run(
+#         user_msg=(
+#             """
+#             Please triage the following property insurance quote submission from a broker:
+#             {
+#             "insurance_broker": "ABC Insurance Brokers",
+#             "date": "24-04-2025",
+#             "insurance_company": "Lloyd’s Insurance",
+#             "address": "100 Fenchurch Street, London, EC3M 5JD",
+#             "recipient": "Mr. John Smith",
+#             "subject": "Request for Property Insurance Quote for GreenTech Solutions Ltd.",
+#             "client": "GreenTech Solutions Ltd.",
+#             "property_information": {
+#             "location": "55 Tech Drive, London, EC1A 1BB",
+#             "type": "Commercial Office Building",
+#             "construction": "Steel frame with brick exterior, built in 2010, no recent renovations",
+#             "surface_area": "780 meter square",
+#             "occupancy": "Office space for 50 employees"
+#             },
+#             "coverage_requirements": {
+#             "desired_coverage_amount": "£2,000,000",
+#             "coverage_type": ["Fire", "theft", "third-party liability"],
+#             "deductibles": "£1,000 per incident",
+#             "additional_coverage": ["Business interruption", "flood protection"]
+#             },
+#             "risk_assessment": {
+#             "fire_hazards": ["Sprinkler system installed", "regular fire drills"],
+#             "natural_disasters": [
+#                 "Low flood risk area",
+#                 "not located near seismic fault lines"
+#             ],
+#             "security_measures": ["24/7 CCTV monitoring", "keycard access control"]
+#             },
+#             "financial_information": {
+#             "property_value": "£2.5M",
+#             "business_revenue": "£8M annually"
+#             },
+#             "contact_person": {
+#             "name": "James Carter",
+#             "email": "james.carter@abcinsurance.com",
+#             "phone": "020 7123 4567"
+#             }
+#         }
+#             Please analyze this submission and determine if it is a duplicate of an existing submission.
+#             """
+#         )
+#     )
 
-    current_agent = None
-    current_tool_calls = ""
+#     current_agent = None
+#     current_tool_calls = ""
 
-    try:
-        async for event in handler.stream_events():
-            if (
-                hasattr(event, "current_agent_name")
-                and event.current_agent_name != current_agent
-            ):
-                current_agent = event.current_agent_name
-                print(f"\n{'='*50}")
-                print(f"🤖 Agent: {current_agent}")
-                print(f"{'='*50}\n")
+#     try:
+#         async for event in handler.stream_events():
+#             if (
+#                 hasattr(event, "current_agent_name")
+#                 and event.current_agent_name != current_agent
+#             ):
+#                 current_agent = event.current_agent_name
+#                 print(f"\n{'='*50}")
+#                 print(f"🤖 Agent: {current_agent}")
+#                 print(f"{'='*50}\n")
 
-            if isinstance(event, AgentStream):
-                if event.delta:
-                    print(event.delta, end="", flush=True)
-            elif isinstance(event, AgentInput):
-                print("\n📥 Input:", event.input)
+#             if isinstance(event, AgentStream):
+#                 if event.delta:
+#                     print(event.delta, end="", flush=True)
+#             elif isinstance(event, AgentInput):
+#                 print("\n📥 Input:", event.input)
 
-            elif isinstance(event, AgentOutput):
-                if event.response.content:
-                    print("\n 📤 Output:", event.response.content)
-                if event.tool_calls:
-                    print(
-                        "\n🛠️  Planning to use tools:",
-                        [call.tool_name for call in event.tool_calls],
-                    )
-            elif isinstance(event, ToolCallResult):
-                print(f"🔧 Tool Result ({event.tool_name}):")
-                print(f"  Arguments: {event.tool_kwargs}")
-                print(f"  Output: {event.tool_output}")
-            elif isinstance(event, ToolCall):
-                print(f"🔨 Calling Tool: {event.tool_name}")
-                print(f"  With arguments: {event.tool_kwargs}")
+#             elif isinstance(event, AgentOutput):
+#                 if event.response.content:
+#                     print("\n 📤 Output:", event.response.content)
+#                 if event.tool_calls:
+#                     print(
+#                         "\n🛠️  Planning to use tools:",
+#                         [call.tool_name for call in event.tool_calls],
+#                     )
+#             elif isinstance(event, ToolCallResult):
+#                 print(f"🔧 Tool Result ({event.tool_name}):")
+#                 print(f"  Arguments: {event.tool_kwargs}")
+#                 print(f"  Output: {event.tool_output}")
+#             elif isinstance(event, ToolCall):
+#                 print(f"🔨 Calling Tool: {event.tool_name}")
+#                 print(f"  With arguments: {event.tool_kwargs}")
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
-    response = await handler
+#     response = await handler
 
-    return response
+#     return response
 
-#############################################################################################################################
-# STAGE 3: AGENTIC COMPLIANCE CHECK FOR INSURANCE QUOTE SUBMISSION
-#############################################################################################################################
+# #############################################################################################################################
+# # STAGE 3: AGENTIC COMPLIANCE CHECK FOR INSURANCE QUOTE SUBMISSION
+# #############################################################################################################################
 
-@app.route(route="agentic_stage_3")
-def agentic_stage_3(req: func.HttpRequest) -> func.HttpResponse:
+# @app.route(route="agentic_stage_3")
+# def agentic_stage_3(req: func.HttpRequest) -> func.HttpResponse:
 
-    """HTTP trigger function to run the agent workflow for insurance quote submission compliance checks."""
-    logging.info('Processing a request to run the agent workflow for insurance quote submission compliance checks.')
+#     """HTTP trigger function to run the agent workflow for insurance quote submission compliance checks."""
+#     logging.info('Processing a request to run the agent workflow for insurance quote submission compliance checks.')
     
-    # Define the agent workflow with the agents and initial state
-    agent_workflow = AgentWorkflow(
-        agents=[dnb_check_agent , sanction_check_agent, companies_house_check_agent, company_database_check_agent, check_email_agent],
-        root_agent=dnb_check_agent.name,
-        initial_state={
-            "report_content": {},
-            "customer_email": "not drafted yet."
-        },
-    )
+#     # Define the agent workflow with the agents and initial state
+#     agent_workflow = AgentWorkflow(
+#         agents=[dnb_check_agent , sanction_check_agent, companies_house_check_agent, company_database_check_agent, check_email_agent],
+#         root_agent=dnb_check_agent.name,
+#         initial_state={
+#             "report_content": {},
+#             "customer_email": "not drafted yet."
+#         },
+#     )
 
-    handler = agent_workflow.run(
-        user_msg=(
-            """
-            Please triage the following property insurance quote submission from a broker:
-            {
-            "insurance_broker": "Prime Insurance Brokers",
-            "date": "24 April 2025",
-            "insurance_company": "Al Ameen Insurance",
-            "address": "Office 801, Saffar Tower, Valiasr Street, Tehran, Iran",
-            "recipient": "Mr. David Thompson",
-            "subject": "Request for Property Insurance Quote for Parsian Evin Hotel Ltd.",
-            "client": "Parsian Evin Hotel Ltd.",
-            "property_information": {
-            "location": "No. 45, Evin Street, Tehran, Iran",
-            "type": "Hotel",
-            "construction": "Modern design, reinforced concrete and steel, built in 2010, no recent renovations",
-            "surface_area": "11,500 m²",
-            "occupancy": "150-room hotel, luxury restaurant, and conference facilities"
-            },
-            "coverage_requirements": {
-            "desired_coverage_amount": "IRR 800,000,000,000",
-            "coverage_type": ["Fire", "theft", "guest property"],
-            "deductibles": "IRR 500,000,000 per incident",
-            "additional_coverage": [
-                "Business interruption",
-                "loss of revenue due to closure",
-                "third-party liability"
-            ]
-            },
-            "risk_assessment": {
-            "fire_hazards": [
-                "Fire alarm and sprinkler system in all rooms",
-                "fire exits clearly marked"
-            ],
-            "natural_disasters": [
-                "Low flood risk",
-                "not located in an earthquake-prone area",
-                "occasional sandstorms"
-            ],
-            "security_measures": [
-                "CCTV surveillance",
-                "24/7 security personnel",
-                "secure entry systems"
-            ]
-            },
-            "financial_information": {
-            "property_value": "IRR 1,000,000,000,000",
-            "business_revenue": "IRR 300,000,000,000 annually"
-            },
-            "contact_person": {
-            "name": "Oliver Green",
-            "email": "oliver.green@primeinsurance.com",
-            "phone": "+971 4 234 5678"
-            }
-        }
-            Please analyze this submission and determine if it meets all compliance check.
-            """
-        )
-    )
+#     handler = agent_workflow.run(
+#         user_msg=(
+#             """
+#             Please triage the following property insurance quote submission from a broker:
+#             {
+#             "insurance_broker": "Prime Insurance Brokers",
+#             "date": "24 April 2025",
+#             "insurance_company": "Al Ameen Insurance",
+#             "address": "Office 801, Saffar Tower, Valiasr Street, Tehran, Iran",
+#             "recipient": "Mr. David Thompson",
+#             "subject": "Request for Property Insurance Quote for Parsian Evin Hotel Ltd.",
+#             "client": "Parsian Evin Hotel Ltd.",
+#             "property_information": {
+#             "location": "No. 45, Evin Street, Tehran, Iran",
+#             "type": "Hotel",
+#             "construction": "Modern design, reinforced concrete and steel, built in 2010, no recent renovations",
+#             "surface_area": "11,500 m²",
+#             "occupancy": "150-room hotel, luxury restaurant, and conference facilities"
+#             },
+#             "coverage_requirements": {
+#             "desired_coverage_amount": "IRR 800,000,000,000",
+#             "coverage_type": ["Fire", "theft", "guest property"],
+#             "deductibles": "IRR 500,000,000 per incident",
+#             "additional_coverage": [
+#                 "Business interruption",
+#                 "loss of revenue due to closure",
+#                 "third-party liability"
+#             ]
+#             },
+#             "risk_assessment": {
+#             "fire_hazards": [
+#                 "Fire alarm and sprinkler system in all rooms",
+#                 "fire exits clearly marked"
+#             ],
+#             "natural_disasters": [
+#                 "Low flood risk",
+#                 "not located in an earthquake-prone area",
+#                 "occasional sandstorms"
+#             ],
+#             "security_measures": [
+#                 "CCTV surveillance",
+#                 "24/7 security personnel",
+#                 "secure entry systems"
+#             ]
+#             },
+#             "financial_information": {
+#             "property_value": "IRR 1,000,000,000,000",
+#             "business_revenue": "IRR 300,000,000,000 annually"
+#             },
+#             "contact_person": {
+#             "name": "Oliver Green",
+#             "email": "oliver.green@primeinsurance.com",
+#             "phone": "+971 4 234 5678"
+#             }
+#         }
+#             Please analyze this submission and determine if it meets all compliance check.
+#             """
+#         )
+#     )
 
-    current_agent = None
-    current_tool_calls = ""
+#     current_agent = None
+#     current_tool_calls = ""
 
-    try:
-        async for event in handler.stream_events():
-            if (
-                hasattr(event, "current_agent_name")
-                and event.current_agent_name != current_agent
-            ):
-                current_agent = event.current_agent_name
-                print(f"\n{'='*50}")
-                print(f" 🤖 Agent: {current_agent}")
-                print(f"{'='*50}\n")
+#     try:
+#         async for event in handler.stream_events():
+#             if (
+#                 hasattr(event, "current_agent_name")
+#                 and event.current_agent_name != current_agent
+#             ):
+#                 current_agent = event.current_agent_name
+#                 print(f"\n{'='*50}")
+#                 print(f" 🤖 Agent: {current_agent}")
+#                 print(f"{'='*50}\n")
 
-            if isinstance(event, AgentStream):
-                if event.delta:
-                    print(event.delta, end="", flush=True)
-            elif isinstance(event, AgentInput):
-                print("\n 📥 Input:", event.input)
+#             if isinstance(event, AgentStream):
+#                 if event.delta:
+#                     print(event.delta, end="", flush=True)
+#             elif isinstance(event, AgentInput):
+#                 print("\n 📥 Input:", event.input)
 
-            elif isinstance(event, AgentOutput):
-                if event.response.content:
-                    print("\n 📤 Output:", event.response.content)
-                if event.tool_calls:
-                    print(
-                        "\n 🛠️  Planning to use tools:",
-                        [call.tool_name for call in event.tool_calls],
-                    )
-            elif isinstance(event, ToolCallResult):
-                print(f" 🔧 Tool Result ({event.tool_name}):")
-                print(f"  Arguments: {event.tool_kwargs}")
-                print(f"  Output: {event.tool_output}")
-            elif isinstance(event, ToolCall):
-                print(f" 🔨 Calling Tool: {event.tool_name}")
-                print(f"  With arguments: {event.tool_kwargs}")
+#             elif isinstance(event, AgentOutput):
+#                 if event.response.content:
+#                     print("\n 📤 Output:", event.response.content)
+#                 if event.tool_calls:
+#                     print(
+#                         "\n 🛠️  Planning to use tools:",
+#                         [call.tool_name for call in event.tool_calls],
+#                     )
+#             elif isinstance(event, ToolCallResult):
+#                 print(f" 🔧 Tool Result ({event.tool_name}):")
+#                 print(f"  Arguments: {event.tool_kwargs}")
+#                 print(f"  Output: {event.tool_output}")
+#             elif isinstance(event, ToolCall):
+#                 print(f" 🔨 Calling Tool: {event.tool_name}")
+#                 print(f"  With arguments: {event.tool_kwargs}")
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
-    response = await handler
+#     response = await handler
 
-    return response
+#     return response
 
-#############################################################################################################################
-# STAGE 4: AGENTIC RESEARCH AND EMAIL RESPONSE FOR INSURANCE QUOTE SUBMISSION
-#############################################################################################################################
+# #############################################################################################################################
+# # STAGE 4: AGENTIC RESEARCH AND EMAIL RESPONSE FOR INSURANCE QUOTE SUBMISSION
+# #############################################################################################################################
 
-@app.route(route="agentic_stage_4")
-def agentic_stage_4(req: func.HttpRequest) -> func.HttpResponse:
+# @app.route(route="agentic_stage_4")
+# def agentic_stage_4(req: func.HttpRequest) -> func.HttpResponse:
 
-    """HTTP trigger function to run the agent workflow for insurance quote submission research and email response."""
-    logging.info('Processing a request to run the agent workflow for insurance quote submission research and email response.')
+#     """HTTP trigger function to run the agent workflow for insurance quote submission research and email response."""
+#     logging.info('Processing a request to run the agent workflow for insurance quote submission research and email response.')
 
-    # Define the agent workflow with the agents and initial state
-    agent_workflow = AgentWorkflow(
-        agents=[research_agent, research_email_agent],
-        root_agent=research_agent.name,
-        initial_state={
-            "research_notes": {},
-            "customer_email": "not drafted yet."
-        },
-    )
+#     # Define the agent workflow with the agents and initial state
+#     agent_workflow = AgentWorkflow(
+#         agents=[research_agent, research_email_agent],
+#         root_agent=research_agent.name,
+#         initial_state={
+#             "research_notes": {},
+#             "customer_email": "not drafted yet."
+#         },
+#     )
 
-    handler = agent_workflow.run(
-        user_msg=(
-            """
-            Please triage the following property insurance quote submission from a broker:
-            {
-            "insurance_broker": "Prime Insurance Brokers",
-            "date": "24 April 2025",
-            "insurance_company": "Al Ameen Insurance",
-            "address": "Office 801, Saffar Tower, Valiasr Street, Tehran, Iran",
-            "recipient": "Mr. David Thompson",
-            "subject": "Request for Property Insurance Quote for Parsian Evin Hotel Ltd.",
-            "client": "Parsian Evin Hotel Ltd.",
-            "property_information": {
-            "location": "No. 45, Evin Street, Tehran, Iran",
-            "type": "Hotel",
-            "construction": "Modern design, reinforced concrete and steel, built in 2010, no recent renovations",
-            "surface_area": "11,500 m²",
-            "occupancy": "150-room hotel, luxury restaurant, and conference facilities"
-            },
-            "coverage_requirements": {
-            "desired_coverage_amount": "IRR 800,000,000,000",
-            "coverage_type": ["Fire", "theft", "guest property"],
-            "deductibles": "IRR 500,000,000 per incident",
-            "additional_coverage": [
-                "Business interruption",
-                "loss of revenue due to closure",
-                "third-party liability"
-            ]
-            },
-            "risk_assessment": {
-            "fire_hazards": [
-                "Fire alarm and sprinkler system in all rooms",
-                "fire exits clearly marked"
-            ],
-            "natural_disasters": [
-                "Low flood risk",
-                "not located in an earthquake-prone area",
-                "occasional sandstorms"
-            ],
-            "security_measures": [
-                "CCTV surveillance",
-                "24/7 security personnel",
-                "secure entry systems"
-            ]
-            },
-            "financial_information": {
-            "property_value": "IRR 1,000,000,000,000",
-            "business_revenue": "IRR 300,000,000,000 annually"
-            },
-            "contact_person": {
-            "name": "Oliver Green",
-            "email": "oliver.green@primeinsurance.com",
-            "phone": "+971 4 234 5678"
-            }
-        }
-            Please analyze this submission and determine if it meets all compliance check.
-            """
-        )
-    )
+#     handler = agent_workflow.run(
+#         user_msg=(
+#             """
+#             Please triage the following property insurance quote submission from a broker:
+#             {
+#             "insurance_broker": "Prime Insurance Brokers",
+#             "date": "24 April 2025",
+#             "insurance_company": "Al Ameen Insurance",
+#             "address": "Office 801, Saffar Tower, Valiasr Street, Tehran, Iran",
+#             "recipient": "Mr. David Thompson",
+#             "subject": "Request for Property Insurance Quote for Parsian Evin Hotel Ltd.",
+#             "client": "Parsian Evin Hotel Ltd.",
+#             "property_information": {
+#             "location": "No. 45, Evin Street, Tehran, Iran",
+#             "type": "Hotel",
+#             "construction": "Modern design, reinforced concrete and steel, built in 2010, no recent renovations",
+#             "surface_area": "11,500 m²",
+#             "occupancy": "150-room hotel, luxury restaurant, and conference facilities"
+#             },
+#             "coverage_requirements": {
+#             "desired_coverage_amount": "IRR 800,000,000,000",
+#             "coverage_type": ["Fire", "theft", "guest property"],
+#             "deductibles": "IRR 500,000,000 per incident",
+#             "additional_coverage": [
+#                 "Business interruption",
+#                 "loss of revenue due to closure",
+#                 "third-party liability"
+#             ]
+#             },
+#             "risk_assessment": {
+#             "fire_hazards": [
+#                 "Fire alarm and sprinkler system in all rooms",
+#                 "fire exits clearly marked"
+#             ],
+#             "natural_disasters": [
+#                 "Low flood risk",
+#                 "not located in an earthquake-prone area",
+#                 "occasional sandstorms"
+#             ],
+#             "security_measures": [
+#                 "CCTV surveillance",
+#                 "24/7 security personnel",
+#                 "secure entry systems"
+#             ]
+#             },
+#             "financial_information": {
+#             "property_value": "IRR 1,000,000,000,000",
+#             "business_revenue": "IRR 300,000,000,000 annually"
+#             },
+#             "contact_person": {
+#             "name": "Oliver Green",
+#             "email": "oliver.green@primeinsurance.com",
+#             "phone": "+971 4 234 5678"
+#             }
+#         }
+#             Please analyze this submission and determine if it meets all compliance check.
+#             """
+#         )
+#     )
 
-    current_agent = None
-    current_tool_calls = ""
+#     current_agent = None
+#     current_tool_calls = ""
 
-    try:
-        async for event in handler.stream_events():
-            if (
-                hasattr(event, "current_agent_name")
-                and event.current_agent_name != current_agent
-            ):
-                current_agent = event.current_agent_name
-                print(f"\n{'='*50}")
-                print(f" 🤖 Agent: {current_agent}")
-                print(f"{'='*50}\n")
+#     try:
+#         async for event in handler.stream_events():
+#             if (
+#                 hasattr(event, "current_agent_name")
+#                 and event.current_agent_name != current_agent
+#             ):
+#                 current_agent = event.current_agent_name
+#                 print(f"\n{'='*50}")
+#                 print(f" 🤖 Agent: {current_agent}")
+#                 print(f"{'='*50}\n")
 
-            if isinstance(event, AgentStream):
-                if event.delta:
-                    print(event.delta, end="", flush=True)
-            elif isinstance(event, AgentInput):
-                print("\n 📥 Input:", event.input)
+#             if isinstance(event, AgentStream):
+#                 if event.delta:
+#                     print(event.delta, end="", flush=True)
+#             elif isinstance(event, AgentInput):
+#                 print("\n 📥 Input:", event.input)
 
-            elif isinstance(event, AgentOutput):
-                if event.response.content:
-                    print("\n 📤 Output:", event.response.content)
-                if event.tool_calls:
-                    print(
-                        "\n 🛠️  Planning to use tools:",
-                        [call.tool_name for call in event.tool_calls],
-                    )
-            elif isinstance(event, ToolCallResult):
-                print(f" 🔧 Tool Result ({event.tool_name}):")
-                print(f"  Arguments: {event.tool_kwargs}")
-                print(f"  Output: {event.tool_output}")
-            elif isinstance(event, ToolCall):
-                print(f" 🔨 Calling Tool: {event.tool_name}")
-                print(f"  With arguments: {event.tool_kwargs}")
+#             elif isinstance(event, AgentOutput):
+#                 if event.response.content:
+#                     print("\n 📤 Output:", event.response.content)
+#                 if event.tool_calls:
+#                     print(
+#                         "\n 🛠️  Planning to use tools:",
+#                         [call.tool_name for call in event.tool_calls],
+#                     )
+#             elif isinstance(event, ToolCallResult):
+#                 print(f" 🔧 Tool Result ({event.tool_name}):")
+#                 print(f"  Arguments: {event.tool_kwargs}")
+#                 print(f"  Output: {event.tool_output}")
+#             elif isinstance(event, ToolCall):
+#                 print(f" 🔨 Calling Tool: {event.tool_name}")
+#                 print(f"  With arguments: {event.tool_kwargs}")
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
-    response = await handler
+#     response = await handler
 
-    return response
+#     return response
