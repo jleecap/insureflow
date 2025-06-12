@@ -1,0 +1,1 @@
+Shared core AI logic (e.g., planning, memory, tool use)
