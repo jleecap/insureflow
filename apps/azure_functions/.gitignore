@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Local config
+local.settings.json
+.env
+
+# macOS
+.DS_Store
+
+# Node (only if accidentally included)
+node_modules/
+package-lock.json

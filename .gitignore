@@ -173,3 +173,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# macOS
+.DS_Store
+
+# Node (only if accidentally included)
+node_modules/
+package-lock.json
