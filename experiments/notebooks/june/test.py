@@ -17,3 +17,4 @@ conn = psycopg2.connect(
     sslmode=os.getenv("PG_SSLMODE")
 )
 cursor = conn.cursor()
+
