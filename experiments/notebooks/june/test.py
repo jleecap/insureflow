@@ -1,13 +1,19 @@
-import azure.functions as func
 import logging
+import os
+import psycopg2
+from datetime import datetime
+from dotenv import load_dotenv
+import os
 
-# Define the Azure Function App
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-@app.route(route="test_function")
-async def test_function(req: func.HttpRequest) -> func.HttpResponse:
-    
-    """HTTP trigger function to run the agent workflow for insurance quote submission triage."""
-    logging.info('Processing a request to run the agent workflow for insurance quote submission triage.')
-    
-    
-    return func.HttpResponse(body = "Agentic Stage 1 complete", status_code = 200)
+load_dotenv()
+
+# Connect to PostgreSQL database
+conn = psycopg2.connect(
+    dbname=os.getenv("PG_DB"),
+    user=os.getenv("PG_USER"),
+    password=os.getenv("PG_PASSWORD"),
+    host=os.getenv("PG_HOST"),
+    port=os.getenv("PG_PORT"),
+    sslmode=os.getenv("PG_SSLMODE")
+)
+cursor = conn.cursor()

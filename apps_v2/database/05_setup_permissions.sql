@@ -3,27 +3,27 @@
 
 -- Create application user (replace with your actual application user)
 -- Note: You may need to run this as a superuser
--- CREATE USER insurance_app WITH PASSWORD 'your_secure_password_here';
+CREATE USER user_final WITH PASSWORD 'p@sswordGRE27';
 
 -- Grant necessary permissions to the application user
--- GRANT CONNECT ON DATABASE your_database_name TO insurance_app;
--- GRANT USAGE ON SCHEMA public TO insurance_app;
+GRANT CONNECT ON DATABASE postgres TO user_final;
+GRANT USAGE ON SCHEMA public TO user_final;
 
 -- Grant table permissions
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO insurance_app;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO insurance_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO user_final;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_final;
 
 -- Grant permissions on views
-GRANT SELECT ON ALL VIEWS IN SCHEMA public TO insurance_app;
+GRANT SELECT ON ALL VIEWS IN SCHEMA public TO user_final;
 
 -- Grant execute permissions on functions
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO insurance_app;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO user_final;
 
 -- Set default privileges for future objects
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO insurance_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO insurance_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON VIEWS TO insurance_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO insurance_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO user_final;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO user_final;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON VIEWS TO user_final;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO user_final;
 
 -- Create indexes for better performance (if not already created)
 CREATE INDEX IF NOT EXISTS idx_submissions_created_at ON submissions(created_at);
