@@ -1,3 +1,7 @@
+#############################################################################################################################
+# IMPORT LIBRARIES
+#############################################################################################################################
+
 import azure.functions as func
 import logging
 import os
@@ -18,15 +22,36 @@ from llama_index.core.agent.workflow import (
 )
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
 import asyncio
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+import psycopg2
+import datetime
 
 #############################################################################################################################
 # INITIALISE LLM AND EMBEDDING MODELS
 #############################################################################################################################
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = "C:/Users/junlee/Documents/insureflow/experiments/notebooks/june/.env")
+load_dotenv()
 
-# for Azure OpenAI model
+# For PG database connection
+pg_db = os.getenv('PG_DB')
+pg_user = os.getenv('PG_USER')
+pg_password = os.getenv('PG_PASSWORD')
+pg_host = os.getenv('PG_HOST')
+pg_port = os.getenv('PG_PORT')
+pg_sslmode = os.getenv('PG_SSLMODE')
+
+# PG database connection
+conn = psycopg2.connect(
+    dbname=os.getenv("PG_DB"),
+    user=os.getenv("PG_USER"),
+    password=os.getenv("PG_PASSWORD"),
+    host=os.getenv("PG_HOST"),
+    port=os.getenv("PG_PORT"),
+    sslmode=os.getenv("PG_SSLMODE")
+)
+
+# For Azure OpenAI model
 api_key = os.getenv('AZURE_OPENAI_API_KEY')
 azure_endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
 gpt_api_version = os.getenv('AZURE_GPT_API_VERSION')
@@ -35,6 +60,9 @@ gpt_deployment_name = os.getenv('AZURE_GPT_DEPLOYMENT_NAME')
 embedding_api_version = os.getenv('AZURE_EMBEDDING_API_VERSION')
 embedding_model_name = os.getenv('AZURE_EMBEDDING_MODEL_NAME')
 embedding_deployment_name = os.getenv('AZURE_EMBEDDING_DEPLOYMENT_NAME')
+
+# Blob storage connection
+azure_storage_connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 
 # Initialize the LLM and embedding model
 llm = AzureOpenAI(
@@ -64,9 +92,14 @@ Settings.embed_model = embed_model
 async def read_property_template_data() -> str:
     """Read template from JSON file and return it as text."""
     try:
-        with open("../../data/submissions/property_quote_submission_template.json", "r") as file:
-            data = json.load(file)  
-        
+        # with open("../../data/submissions/property_quote_submission_template.json", "r") as file:
+        #     data = json.load(file) 
+        blob_service_client = BlobServiceClient.from_connection_string(azure_storage_connection_string)
+        container_name = "submission-template"
+        blob_name = "property_quote_submission_template.json"
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        data = json.loads(blob_client.download_blob().readall())
+                
         # Convert JSON data to formatted text
         result = []
         for key, value in data.items():
@@ -406,11 +439,11 @@ triage_agent = FunctionAgent(
 
         Do a detailed analysis of the submission and ensure you are thorough in your review before taking notes.
         After completing your analysis, hand over to the EmailAgent with your findings for further processing and client communication.
-        Always handover to the EmailAgent, even if you find the submission complete. The EmailAgent will handle the next steps.
+        Always handover to the TriageEmailAgent, even if you find the submission complete. The EmailAgent will handle the next steps.
         """),
     llm=llm,
     tools=[ read_property_template_data, record_notes],
-    can_handoff_to=["EmailAgent"],
+    can_handoff_to=["TriageEmailAgent"],
 )
 
 triage_email_agent = FunctionAgent(
@@ -418,31 +451,30 @@ triage_email_agent = FunctionAgent(
     description="Useful for drafting and sending emails to brokers regarding missing information in insurance submissions and proceeding with the submission if all information is present.",
     system_prompt=(
         """
-        You are an Insurance Email Response Agent with the persona of Yoda, the wise Jedi Master from Star Wars.
+        You are an Insurance Email Response Agent.
 
         Your task is to review the notes created by the TriageAgent regarding an insurance submission and determine next steps:
 
         1. Review the triage notes in detail using the information already stored in the context
         2. Determine if any information is missing from the submission
         3. If information is missing:
-            - Draft a professional yet distinctive email response in the style of Yoda
+            - Draft a professional email response
             - The email should clearly identify the missing information 
             - Request the broker to provide the missing details
-            - Maintain Yoda's unique speech pattern while being clear about requirements
             - Use the write_email tool to record your response with a section title "Broker Response"
 
         4. If all required information is present:
             - Use the move_to_next_stage tool to continue processing the submission
             - Briefly note that the submission is complete and ready for processing
 
-        Your Yoda persona should include:
-        - Inverted sentence structure ("Missing, the address is")
-        - Wise yet cryptic expressions
-        - Short, impactful statements
-        - References to the Force where appropriate
+        Remember to keep the email professional and ensure all communication is clear about what information is needed.
+        Your goal is to ensure the broker understands what is required and to maintain a positive relationship.
 
-        Remember to keep the email professional despite the stylistic elements, and ensure all communication is clear about what information is needed.
-        Your goal is to ensure the broker understands what is required and to maintain a positive relationship while being clear about the requirements while keeping the tone of email in line with Yoda's distinctive speech pattern.
+        Please output your response in json format with the following structure:
+        {
+            "email_content": "Your email content here",
+            "next_action": "pending" or "needs-info"
+        }
        """
     ),
     llm=llm,
@@ -493,7 +525,7 @@ duplicate_check_agent = FunctionAgent(
         """),
     llm=llm,
     tools=[ read_existing_submissions, record_notes],
-    can_handoff_to=["EmailAgent"],
+    can_handoff_to=["DuplicateCheckEmailAgent"],
 )
 
 duplicate_check_email_agent = FunctionAgent(
@@ -667,7 +699,7 @@ company_database_check_agent = FunctionAgent(
         """),
     llm=llm,
     tools=[ read_company_database, write_report],
-    can_handoff_to=["EmailAgent"],
+    can_handoff_to=["CheckEmailAgent"],
 )
 
 check_email_agent = FunctionAgent(
@@ -738,9 +770,8 @@ research_agent = FunctionAgent(
     ),
     llm=llm,
     tools=[search_documents, record_notes],
-    can_handoff_to=["EmailAgent"],
+    can_handoff_to=["ResearchEmailAgent"],
 )
-
 
 research_email_agent = FunctionAgent(
     name="ResearchEmailAgent",
@@ -776,10 +807,13 @@ research_email_agent = FunctionAgent(
 # STAGE 1: Agentic Triage and Email Response for Insurance Quote Submission
 #############################################################################################################################
 
-# Define the Azure Function App
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-@app.route(route="agentic_stage_1")
-async def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
+# json_string = """{"EmailContent": "EMAILEMAILEMAIL", "SubmissionStatus": "needs-info"}"""
+# json_string.split("\"")[-2]
+
+# Decorates the function to create an HTTP trigger for the Azure Function App
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS) # Comment out when testing locally
+@app.route(route="agentic_stage_1") # Comment out when testing locally
+async def agentic_stage_1(req: func.HttpRequest):
     
     """HTTP trigger function to run the agent workflow for insurance quote submission triage."""
     logging.info('Processing a request to run the agent workflow for insurance quote submission triage.')
@@ -793,57 +827,52 @@ async def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
             "customer_email": "not drafted yet."
         },
     )
-    logging.info('Defined agent workflow')
+
+    # Update submissions table with workflow_stage = 'core-data'
+    cursor = conn.cursor()
+
+    # Retrieve submission id
+    cursor.execute(
+        """SELECT id FROM submissions ORDER BY submitted_at DESC LIMIT 1"""
+        )
+    submission_id = cursor.fetchone()[0]
+    logging.info(f"Retrieved submission ID: {submission_id}")
+
+    # Update the submission with workflow_stage = 'core-data'
+    cursor.execute(
+        """UPDATE submissions SET workflow_stage = 'core-data' WHERE id = %s""", (submission_id,)
+        )
+    logging.info("Updated the workflow status")
+
+    # Retrieve submission data
+    cursor.execute("""SELECT "broker", "insured", "address", "building_type", "construction", 
+                "year_built", "area", "stories", "occupancy", "sprinklers", "alarm_system", 
+                "building_value", "contents_value", "business_interruption", "deductible", 
+                "fire_hazards", "natural_disasters", "security", "property_valuation", 
+                "annual_revenue", "source_file", "submitted_at" 
+                FROM submissions ORDER BY submitted_at DESC LIMIT 1""")
+
+    # Fetch the last row from the executed query
+    row = cursor.fetchone()
+    fields = ["broker", "insured", "address", "building_type", "construction", 
+            "year_built", "area", "stories", "occupancy", "sprinklers", "alarm_system", 
+            "building_value", "contents_value", "business_interruption", "deductible", 
+            "fire_hazards", "natural_disasters", "security", "property_valuation", 
+            "annual_revenue", "source_file", "submitted_at"]
+
+    # Create submission data json
+    submission_data = {fields[i]: row[i].encode('utf-8') for i in range(len(fields)) if fields[i] != "submitted_at"}
+    submission_data['submitted_at'] = row[-1].strftime('%Y-%m-%d')
+    logging.info(f"Submission data: {submission_data}")
 
     # Initialize the agent workflow with the user message
     handler = agent_workflow.run(
         user_msg=(
-            """
+            f"""
             Please triage the following property insurance quote submission from a broker:
-            {
-            "insurance_broker": "XYZ Insurance Services",
-            "date": "24 April 2025",
-            "insurance_company": "Aviva Insurance",
-            "address": "",
-            "recipient": "Mrs. Sarah Brown",
-            "subject": "Request for Property Insurance Quote for Coffee Heaven Ltd.",
-            "client": "Coffee Haven Ltd.",
-            "property_information": {
-            "type": "Commercial Coffee Shop and Retail Store",
-            "construction": "Traditional brick and mortar, built in 1998, recently renovated in 2024",
-            "surface_area": "250 m²",
-            "occupancy": "Coffee shop production on the ground floor, retail space on the first floor"
-            },
-            "coverage_requirements": {
-            "desired_coverage_amount": "£1,500,000",
-            "coverage_type": ["Fire", "theft", "third-party liability"],
-            "deductibles": "£750 per incident",
-            "additional_coverage": [
-                "Equipment breakdown",
-                "public liability",
-                "accidental damage"
-            ]
-            },
-            "risk_assessment": {
-            "fire_hazards": ["Industrial ovens in use", "sprinkler system in place"],
-            "natural_disasters": [
-                "Low flood risk",
-                "located in an area not prone to earthquakes"
-            ],
-            "security_measures": ["Alarm system", "24/7 security monitoring"]
-            },
-            "financial_information": {
-            "property_value": "",
-            "business_revenue": "£500,000 annually"
-            },
-            "contact_person": {
-            "name": "Emma Wilson",
-            "email": "emma.wilson@xyzinsurance.com",
-            "phone": "0121 234 5678"
-            }
-        }
+            {submission_data}
             Please analyze this submission and determine what information might be missing compared to our standard property quote submission template.
-    """
+            """
         )
     )
 
@@ -859,36 +888,48 @@ async def agentic_stage_1(req: func.HttpRequest) -> func.HttpResponse:
                 and event.current_agent_name != current_agent
             ):
                 current_agent = event.current_agent_name
-                print(f"\n{'='*50}")
+                print(f"\n\n{'='*50}")
                 print(f"Agent: {current_agent}")
-                print(f"{'='*50}\n")
+                print(f"{'='*50}\n\n")
 
             if isinstance(event, AgentStream):
                 if event.delta:
                     print(event.delta, end="", flush=True)
-            elif isinstance(event, AgentInput):
-                print("\nInput:", event.input)
+            # elif isinstance(event, AgentInput):
+            #     print("\n\nInput:", event.input)
 
             elif isinstance(event, AgentOutput):
                 if event.response.content:
-                    print("\nOutput:", event.response.content)
+                    print("\n\nOutput 1:", event.response.content)
                 if event.tool_calls:
                     print(
-                        "\nPlanning to use tools:",
+                        "\n\nPlanning to use tools:",
                         [call.tool_name for call in event.tool_calls],
                     )
             elif isinstance(event, ToolCallResult):
-                print(f"Tool Result ({event.tool_name}):")
-                print(f"Arguments: {event.tool_kwargs}")
-                print(f"Output: {event.tool_output}")
+                logging.info(f"""\nTool Result: ({event.tool_name})""")
+                logging.info(f"""\nArguments: {event.tool_kwargs}""")
+                logging.info(f"""\nOutput 2: {event.tool_output}""")
             elif isinstance(event, ToolCall):
-                print(f"Calling Tool: {event.tool_name}")
-                print(f"With arguments: {event.tool_kwargs}")
+                logging.info(f"""\nCalling Tool: {event.tool_name}""")
+                logging.info(f"""\nWith arguments: {event.tool_kwargs}""")
 
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
     response = await handler
+
+    # Update submission status
+    
+    # Current time
+    current_time = datetime.datetime.now()
+    # logging.info(f"Output from agent: {event.tool_output}")
+    # logging.info(f"Submission status: {submission_status}")
+    # output = event.tool_output
+    # submission_status = output.split("\"")[-2]  # Extract the submission status from the output
+    
+    # cursor.execute("""UPDATE submissions SET submission_status = %s, updated_at = %s WHERE id = %s""", (submission_status, current_time, submission_id))
+    # cursor.close()
 
     return func.HttpResponse(body = "Agentic Stage 1 complete", status_code = 200)
 
