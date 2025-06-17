@@ -16,21 +16,36 @@ CREATE TYPE check_status AS ENUM ('passed', 'failed', 'pending');
 -- Main submissions table
 CREATE TABLE submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    reference VARCHAR(50) UNIQUE NOT NULL,
-    client VARCHAR(255) NOT NULL,
-    broker VARCHAR(255) NOT NULL,
-    "submissionDate" DATE NOT NULL,
-    stage workflow_stage NOT NULL DEFAULT 'extraction',
-    status submission_status NOT NULL DEFAULT 'pending',
-    "lineOfBusiness" VARCHAR(100) NOT NULL,
-    premium DECIMAL(12, 2),
-    location TEXT,
-    "propertyType" VARCHAR(255),
-    "coverageAmount" VARCHAR(100),
-    "emailContent" TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    "broker" VARCHAR(255) NOT NULL, 
+    "insured" VARCHAR(255) NOT NULL, 
+    "address" VARCHAR(255) NOT NULL, 
+    "building_type" VARCHAR(255) NOT NULL,
+    "construction" VARCHAR(255) NOT NULL, 
+    "year_built" VARCHAR(255) NOT NULL,
+    "area" VARCHAR(255) NOT NULL, 
+    "stories" VARCHAR(255) NOT NULL, 
+    "occupancy" VARCHAR(255) NOT NULL, 
+    "sprinklers" VARCHAR(255) NOT NULL, 
+    "alarm_system" VARCHAR(255) NOT NULL,
+    "building_value" VARCHAR(255) NOT NULL, 
+    "contents_value" VARCHAR(255) NOT NULL, 
+    "business_interruption" VARCHAR(255) NOT NULL, 
+    "deductible" VARCHAR(255) NOT NULL,
+    "fire_hazards" VARCHAR(255) NOT NULL, 
+    "natural_disasters" VARCHAR(255) NOT NULL, 
+    "security" VARCHAR(255) NOT NULL, 
+    "property_valuation" VARCHAR(255) NOT NULL,
+    "annual_revenue" VARCHAR(255) NOT NULL, 
+    "source_file" VARCHAR(255) NOT NULL, 
+    "submitted_at" DATE NOT NULL,
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "workflow_stage" VARCHAR(255) NOT NULL DEFAULT 'extraction',
+    "submission_status" VARCHAR(255) NOT NULL DEFAULT 'pending',
+    "priority_level" VARCHAR(255) NOT NULL DEFAULT 'medium',
+    "check_status" VARCHAR(255) NOT NULL DEFAULT 'pending'
 );
+
 
 -- Missing data items table
 CREATE TABLE missing_data_items (
