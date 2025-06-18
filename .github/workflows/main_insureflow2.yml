@@ -1,42 +1,30 @@
-name: Build and deploy Node.js app to Azure Web App - insureflow2
+name: Deploy apps_v2 (Python) to Azure Web App
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          node-version: '20.x'
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+          python-version: '3.10'  # adjust if needed
 
       - name: Install dependencies
-        run: pnpm install
-        working-directory: ./apps_v2
-
-      - name: Build the app
-        run: pnpm run build
-        working-directory: ./apps_v2
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         with:
-          app-name: 'insureflow2'
-          slot-name: 'Production'
+          app-name: insureflow2
+          slot-name: production
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_235A5BE7255747E98F67909DA20A278D }}
           package: ./apps_v2
